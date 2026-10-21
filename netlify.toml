@@ -1,0 +1,5 @@
+# Branded lease-signing links: tldr site /sign/abc123 -> Lease Desk signing page
+[[redirects]]
+  from = "/sign/*"
+  to = "https://lease-desk.netlify.app/l/:splat"
+  status = 302

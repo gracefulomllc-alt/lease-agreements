@@ -1,6 +1,6 @@
 # TLDR Enterprise — Studio Rentals Website
 
-Live site for TLDR Enterprise studio apartments at 411 Troy Ave, Pueblo, CO.
+Live site for TLDR Enterprise studio apartments at 411 Thunderwolf Dr (formerly Troy Ave), Pueblo, CO.
 
 - `index.html` — the entire website (single file, photos embedded)
 - `assets/` — logo files (PNG + SVG)

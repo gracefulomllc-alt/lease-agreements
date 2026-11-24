@@ -62,6 +62,7 @@
   .body{padding:14px 16px;min-width:0;}
   .badge{display:inline-block;font:700 .72rem 'Public Sans',sans-serif;letter-spacing:.06em;text-transform:uppercase;border-radius:999px;padding:3px 10px;}
   .badge.av{background:var(--avail-bg);color:var(--avail);}
+  .badge.sale{background:#FBF1DC;color:#8A5A00;}
   .badge.na{background:#E9ECED;color:#6A777D;}
   .addr{font-family:'Zilla Slab',serif;font-size:1.15rem;font-weight:700;margin:6px 0 2px;line-height:1.25;}
   .meta{font-size:.88rem;color:var(--mute);}
@@ -79,6 +80,23 @@
   .lb .cap{color:#E3E9EB;font-size:.9rem;margin-top:10px;text-align:center;}
   .lb button{position:absolute;background:rgba(255,255,255,.14);color:#fff;border:none;border-radius:999px;width:44px;height:44px;font-size:1.4rem;cursor:pointer;}
   .lb .x{top:14px;right:14px;} .lb .pv{left:12px;top:50%;} .lb .nx{right:12px;top:50%;}
+  .inq{position:fixed;inset:0;background:rgba(10,16,20,.6);z-index:2100;display:none;align-items:flex-end;justify-content:center;}
+  .inq.on{display:flex;}
+  .inq form{background:#fff;width:100%;max-width:520px;border-radius:16px 16px 0 0;padding:20px 20px 24px;max-height:92vh;overflow:auto;}
+  @media (min-width:600px){ .inq{align-items:center;} .inq form{border-radius:16px;} }
+  .inq h2{font-family:'Zilla Slab',serif;font-size:1.4rem;margin-bottom:2px;}
+  .inq .sub{color:var(--mute);font-size:.92rem;margin-bottom:14px;}
+  .inq label{display:block;font-weight:600;font-size:.92rem;margin:12px 0 4px;}
+  .inq input,.inq textarea{width:100%;font:inherit;font-size:1rem;padding:11px 12px;border:1.5px solid var(--line);border-radius:10px;}
+  .inq .seg{display:flex;gap:8px;}
+  .inq .seg label{flex:1;margin:0;border:2px solid var(--line);border-radius:10px;padding:12px;text-align:center;cursor:pointer;}
+  .inq .seg input{position:absolute;opacity:0;width:1px;height:1px;}
+  .inq .seg input:checked + span{font-weight:700;}
+  .inq .seg label:has(input:checked){border-color:var(--steel-deep);background:#EEF3F6;}
+  .inq .row{display:flex;gap:10px;margin-top:18px;}
+  .inq .row .btn{flex:1;text-align:center;padding:13px;}
+  .inq .msg{margin-top:12px;font-weight:600;}
+  .hp{position:absolute;left:-9999px;}
   .pin{width:26px;height:36px;}
   .leaflet-popup-content{font-family:'Public Sans',sans-serif;margin:12px 14px;}
   .pop strong{font-family:'Zilla Slab',serif;font-size:1rem;display:block;}
@@ -127,6 +145,25 @@
   </div>
 </footer>
 
+<div class="inq" id="inq" role="dialog" aria-modal="true" aria-labelledby="inq-title">
+  <form id="inq-form" name="inquiry" method="POST" data-netlify="true" netlify-honeypot="website" novalidate>
+    <input type="hidden" name="form-name" value="inquiry">
+    <input type="hidden" name="property" id="inq-prop">
+    <p class="hp"><label>Leave this empty <input name="website" tabindex="-1" autocomplete="off"></label></p>
+    <h2 id="inq-title">Ask about this home</h2>
+    <p class="sub" id="inq-sub"></p>
+    <div class="seg" id="inq-seg">
+      <label><input type="radio" name="interest" value="rent" checked><span>I want to rent</span></label>
+      <label><input type="radio" name="interest" value="buy"><span>I want to buy</span></label>
+    </div>
+    <label for="inq-name">Your name</label><input id="inq-name" name="name" autocomplete="name" required>
+    <label for="inq-phone">Phone</label><input id="inq-phone" name="phone" type="tel" autocomplete="tel" placeholder="(719) 555-0100">
+    <label for="inq-email">Email</label><input id="inq-email" name="email" type="email" autocomplete="email" placeholder="you@email.com">
+    <label for="inq-msg">Questions or when you'd like to move (optional)</label><textarea id="inq-msg" name="message" rows="3"></textarea>
+    <p class="msg" id="inq-out" role="status"></p>
+    <div class="row"><button type="button" class="btn btn-ghost" id="inq-cancel">Cancel</button><button type="submit" class="btn" id="inq-send">Send</button></div>
+  </form>
+</div>
 <div class="lb" id="lb" role="dialog" aria-modal="true" aria-label="Photos">
   <button class="x" id="lb-x" aria-label="Close">&times;</button>
   <button class="pv" id="lb-pv" aria-label="Previous photo">&#8249;</button>
@@ -144,7 +181,9 @@
   // Photos per listing id (files in assets/properties). Listings without photos show "Pictures coming soon".
   var PHOTOS = {
     troy411: [2, 1, 3, 4, 5].map(function (n) { return 'assets/properties/troy-' + n + '.jpg'; }),
-    e4th2043a: [1, 2, 3, 4, 5, 6, 7].map(function (n) { return 'assets/properties/2043a-' + n + '.jpg'; })
+    e4th2043a: [1, 2, 3, 4, 5, 6, 7].map(function (n) { return 'assets/properties/2043a-' + n + '.jpg'; }),
+    platte544: [1, 2, 3, 4, 5].map(function (n) { return 'assets/properties/platte544-' + n + '.jpg'; }),
+    brinn625: [1, 2, 4, 5, 3].map(function (n) { return 'assets/properties/brinn625-' + n + '.jpg'; })
   };
   var esc = function (s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); };
   var title = function (it) { return it.address + (it.unit ? ', ' + it.unit : ''); };
@@ -161,8 +200,10 @@
   function actions(it) {
     var mail = 'mailto:' + EMAIL + '?subject=' + encodeURIComponent((it.available ? 'Interested in ' : 'Notify me about ') + title(it) + ', ' + it.city);
     if (!it.available) return '<a class="btn btn-ghost btn-sm" href="' + mail + '">Notify me when available</a>';
-    return (it.applyUrl ? '<a class="btn btn-sm" href="' + esc(it.applyUrl) + '" target="_blank" rel="noopener">Apply now</a>' : '') +
-      '<a class="btn btn-ghost btn-sm" href="tel:' + PHONE + '">Call</a><a class="btn btn-ghost btn-sm" href="' + mail + '">Email</a>' +
+    var ask = it.forSale ? (it.forRent !== false ? 'Ask to rent or buy' : 'Ask about buying') : 'Ask about renting';
+    return '<button class="btn btn-sm" data-inq="' + esc(it.id) + '">' + ask + '</button>' +
+      (it.applyUrl ? '<a class="btn btn-ghost btn-sm" href="' + esc(it.applyUrl) + '" target="_blank" rel="noopener">Apply now</a>' : '') +
+      '<a class="btn btn-ghost btn-sm" href="tel:' + PHONE + '">Call</a>' +
       (PHOTOS[it.id] ? '<a class="btn btn-ghost btn-sm" href="#" data-lb="' + esc(it.id) + '">See photos</a>' : '');
   }
   function visible() {
@@ -179,10 +220,11 @@
       return '<article class="card' + (it.available ? '' : ' off') + '" data-id="' + esc(it.id) + '" tabindex="0">' +
         (PHOTOS[it.id] ? '<div class="photo" data-photos="' + esc(it.id) + '"><img src="' + PHOTOS[it.id][0] + '" alt="' + esc(title(it)) + '" loading="lazy"><span class="n">' + PHOTOS[it.id].length + ' photos</span></div>' : '<div class="photo">Pictures coming soon</div>') +
         '<div class="body">' +
-          (it.available ? '<span class="badge av">Available' + (it.availableNote ? ' · ' + esc(it.availableNote) : '') + '</span>' : '<span class="badge na">Not available</span>') +
+          (it.available ? (it.forSale ? (it.forRent !== false ? '<span class="badge av">For rent</span> ' : '') + '<span class="badge sale">For sale</span>' : '<span class="badge av">Available' + (it.availableNote ? ' · ' + esc(it.availableNote) : '') + '</span>') : '<span class="badge na">Not available</span>') +
           '<div class="addr">' + esc(title(it)) + '</div>' +
           '<div class="meta">' + esc(it.city) + ', ' + esc(it.state || 'CO') + ' ' + esc(it.zip || '') + (specs ? ' · ' + esc(specs) : '') + '</div>' +
-          (it.available && it.rent ? '<div class="price">' + money(it.rent) + '/mo ' + (it.rentNote ? '<small>' + esc(it.rentNote.replace(/^per month,?\s*/i, '')) + '</small>' : '') + '</div>' : '') +
+          (it.available && it.rent && it.forRent !== false ? '<div class="price">' + money(it.rent) + '/mo ' + (it.rentNote ? '<small>' + esc(it.rentNote.replace(/^per month,?\s*/i, '')) + '</small>' : '') + '</div>' : '') +
+          (it.available && it.forSale ? '<div class="price">' + (it.salePrice ? money(it.salePrice) + ' <small>to buy</small>' : '<small>Ask about the sale price</small>') + '</div>' : '') +
           (it.available && it.notes ? '<div class="desc">' + esc(it.notes) + '</div>' : '') +
           '<div class="acts">' + actions(it) + '</div>' +
         '</div></article>';
@@ -203,7 +245,7 @@
     else if (pts.length) map.fitBounds(pts, { padding: [36, 36], maxZoom: 15 });
     Array.prototype.forEach.call(list.querySelectorAll('.card'), function (el) {
       var go = function (e) { if (e.target.closest('a')) return; if (e.target.closest('[data-photos]')) { openLb(el.dataset.id, 0); return; } var m = markers[el.dataset.id]; if (m) { map.setView(m.getLatLng(), Math.max(map.getZoom(), 14)); m.openPopup(); } highlight(el.dataset.id, false); if (window.innerWidth <= 880) document.getElementById('map').scrollIntoView({ behavior: 'smooth', block: 'start' }); };
-      el.addEventListener('click', function (e) { var a = e.target.closest('[data-lb]'); if (a) { e.preventDefault(); openLb(a.dataset.lb, 0); return; } go(e); });
+      el.addEventListener('click', function (e) { var q = e.target.closest('[data-inq]'); if (q) { e.preventDefault(); openInq(q.dataset.inq); return; } var a = e.target.closest('[data-lb]'); if (a) { e.preventDefault(); openLb(a.dataset.lb, 0); return; } go(e); });
       el.addEventListener('keydown', function (e) { if (e.key === 'Enter') go(e); });
     });
   }
@@ -223,6 +265,40 @@
   document.getElementById('lb').addEventListener('click', function (e) { if (e.target.id === 'lb') closeLb(); });
   document.addEventListener('keydown', function (e) { if (!document.getElementById('lb').classList.contains('on')) return; if (e.key === 'Escape') closeLb(); if (e.key === 'ArrowLeft') stepLb(-1); if (e.key === 'ArrowRight') stepLb(1); });
   (function () { var x0 = null; var lb = document.getElementById('lb'); lb.addEventListener('touchstart', function (e) { x0 = e.touches[0].clientX; }); lb.addEventListener('touchend', function (e) { if (x0 == null) return; var dx = e.changedTouches[0].clientX - x0; if (Math.abs(dx) > 40) stepLb(dx < 0 ? 1 : -1); x0 = null; }); })();
+  // ---- inquiry form: saved to Lease Desk and sent to Netlify Forms (email alert)
+  var INQ_API = 'https://lease-desk.netlify.app/api/inquiries';
+  var inqItem = null;
+  function openInq(id) {
+    var it = state.items.filter(function (x) { return x.id === id; })[0]; if (!it) return; inqItem = it;
+    var both = it.forSale && it.forRent !== false;
+    document.getElementById('inq-title').textContent = both ? 'Rent or buy this home' : it.forSale ? 'Ask about buying' : 'Ask about renting';
+    document.getElementById('inq-sub').textContent = title(it) + ', ' + it.city + '. We usually reply within a day.';
+    document.getElementById('inq-seg').style.display = both ? '' : 'none';
+    document.querySelector('#inq-seg input[value=' + (it.forSale && it.forRent === false ? 'buy' : 'rent') + ']').checked = true;
+    document.getElementById('inq-prop').value = title(it) + ', ' + it.city;
+    document.getElementById('inq-out').textContent = ''; document.getElementById('inq-send').disabled = false;
+    document.getElementById('inq').classList.add('on'); document.getElementById('inq-name').focus();
+  }
+  function closeInq() { document.getElementById('inq').classList.remove('on'); }
+  document.getElementById('inq-cancel').addEventListener('click', closeInq);
+  document.getElementById('inq').addEventListener('click', function (e) { if (e.target.id === 'inq') closeInq(); });
+  document.addEventListener('keydown', function (e) { if (e.key === 'Escape') closeInq(); });
+  document.getElementById('inq-form').addEventListener('submit', function (e) {
+    e.preventDefault();
+    var f = e.target, out = document.getElementById('inq-out'), btn = document.getElementById('inq-send');
+    var data = { name: f.name.value.trim(), phone: f.phone.value.trim(), email: f.email.value.trim(), message: f.message.value.trim(),
+      interest: (f.querySelector('input[name=interest]:checked') || {}).value || 'rent', property: f.property.value, listingId: inqItem ? inqItem.id : '', website: f.website.value };
+    if (!data.name) { out.style.color = '#B3261E'; out.textContent = 'Please enter your name.'; return; }
+    if (!data.phone && !data.email) { out.style.color = '#B3261E'; out.textContent = 'Please give a phone number or email so we can reach you.'; return; }
+    btn.disabled = true; out.style.color = ''; out.textContent = 'Sending…';
+    var body = new URLSearchParams(new FormData(f)).toString();
+    var p1 = fetch(INQ_API, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) }).then(function (r) { return r.ok; }).catch(function () { return false; });
+    var p2 = fetch('/', { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: body }).then(function (r) { return r.ok; }).catch(function () { return false; });
+    Promise.all([p1, p2]).then(function (r) {
+      if (r[0] || r[1]) { out.style.color = '#1E7A45'; out.textContent = 'Thanks! We got your message and will contact you soon.'; f.reset(); setTimeout(closeInq, 2500); }
+      else { btn.disabled = false; out.style.color = '#B3261E'; out.innerHTML = 'Couldn\'t send. Please call <a href="tel:' + PHONE + '">(719) 359-7502</a>.'; }
+    });
+  });
   function highlight(id, scroll) {
     Array.prototype.forEach.call(document.querySelectorAll('.card'), function (c) { c.classList.toggle('hl', c.dataset.id === id); });
     if (scroll) { var el = document.querySelector('.card[data-id="' + id + '"]'); if (el) el.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); }
